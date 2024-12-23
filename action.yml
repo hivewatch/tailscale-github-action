@@ -151,11 +151,11 @@ runs:
         DNS_TIMEOUT: ${{ inputs.dns_timeout }}
         DOMAIN: ${{ inputs.domain }}
       run: |
-        timeout --verbose --kill-after=1s ${DNS_TIMEOUT} sudo -E bash -c 'while [[ $(dig +short ${DOMAIN} | wc -l) -eq 0 ]]; do sleep 1; done'
+        TIME="$(/usr/bin/time -f "%e" timeout --verbose --kill-after=1s ${DNS_TIMEOUT} sudo -E bash -c 'while [[ $(dig +short ${DOMAIN} | wc -l) -eq 0 ]]; do sleep 1; done' 2>&1 1>/dev/null)"
         EXIT_STATUS=$?
-        if [ $EXIT_STATUS -eq 124 ]
+        if [ $EXIT_STATUS -eq 0 ]
         then
-        echo 'Tailscale Timed Out!'
+        echo 'Tailscale connected => '$TIME' seconds.'
         else
-        echo 'Tailscale connected.'
+        echo 'Tailscale Timed Out with exit='$EXIT_STATUS' after '$TIME' seconds!'
         fi
