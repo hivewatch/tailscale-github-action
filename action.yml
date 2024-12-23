@@ -144,7 +144,14 @@ runs:
           TAILSCALE_AUTHKEY="${{ inputs['oauth-secret'] }}?preauthorized=true&ephemeral=true"
           TAGS_ARG="--advertise-tags=${{ inputs.tags }}"
         fi
-        timeout --verbose --kill-after=1s ${TIMEOUT} sudo -E tailscale up ${TAGS_ARG} --authkey=${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME} --accept-routes --accept-dns ${ADDITIONAL_ARGS}
+        TIME="$(timeout --verbose --kill-after=1s ${TIMEOUT} sudo -E tailscale up ${TAGS_ARG} --authkey=${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME} --accept-routes --accept-dns ${ADDITIONAL_ARGS} 2>&1 1>/dev/null)"
+        EXIT_STATUS=$?
+        if [ $EXIT_STATUS -eq 0 ]
+        then
+        echo 'tailscale up finished in '$TIME' seconds.'
+        else
+        echo 'tailscale up failed with exit='$EXIT_STATUS' after '$TIME' seconds!'
+        fi
     - name: Wait for Tailscale DNS
       shell: bash
       env:
